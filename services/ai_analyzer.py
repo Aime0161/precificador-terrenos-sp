@@ -1,11 +1,16 @@
 import os
 import json
-from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
+def _get_client():
+    """Cria o cliente OpenAI de forma lazy — só instancia se a chave existir."""
+    from openai import OpenAI
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key or api_key.startswith("sk-xxx"):
+        return None
+    return OpenAI(api_key=api_key)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Análise IA com GPT-4
@@ -26,8 +31,8 @@ def analisar_terreno_com_ia(
     Chama GPT-4 para gerar análise completa do terreno.
     Retorna dict com: parecer, pontos_positivos, pontos_negativos, veredicto, score
     """
-    api_key = os.getenv("OPENAI_API_KEY", "")
-    if not api_key or api_key.startswith("sk-xxx"):
+    client = _get_client()
+    if client is None:
         return _analise_demo(bairro, area_m2, preco_m2_mercado, preco_m2_ofertado,
                              zona, coef_aproveit, risco_alag, risco_seg, valorizacao_aa)
 
